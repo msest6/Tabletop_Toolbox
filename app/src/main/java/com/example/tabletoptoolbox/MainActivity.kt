@@ -9,17 +9,17 @@ import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.tabletoptoolbox.bela.Bela
 import com.example.tabletoptoolbox.bela.BelaMenu
 import com.example.tabletoptoolbox.bela.BelaNewGame
@@ -42,6 +42,8 @@ import com.example.tabletoptoolbox.data.GradDrzavaRepository
 import com.example.tabletoptoolbox.data.PreferencesDataStore
 import com.example.tabletoptoolbox.data.ThemeRepository
 import com.example.tabletoptoolbox.data.UnoRepository
+import com.example.tabletoptoolbox.data.boardGames.GameDatabase
+import com.example.tabletoptoolbox.data.boardGames.GameRepository
 import com.example.tabletoptoolbox.data.model.CheckoutTable
 import com.example.tabletoptoolbox.data.model.ThemeMode
 import com.example.tabletoptoolbox.graddrzava.GradDrzava
@@ -49,6 +51,18 @@ import com.example.tabletoptoolbox.graddrzava.GradDrzavaMenu
 import com.example.tabletoptoolbox.graddrzava.GradDrzavaNewGame
 import com.example.tabletoptoolbox.graddrzava.GradDrzavaViewModel
 import com.example.tabletoptoolbox.graddrzava.GradDrzavaViewModelFactory
+import com.example.tabletoptoolbox.tabletier.EloQuizScreen
+import com.example.tabletoptoolbox.tabletier.EloQuizViewModel
+import com.example.tabletoptoolbox.tabletier.EloQuizViewModelFactory
+import com.example.tabletoptoolbox.tabletier.EloScreen
+import com.example.tabletoptoolbox.tabletier.MainPagerScreen
+import com.example.tabletoptoolbox.tabletier.TableTierNewGame
+import com.example.tabletoptoolbox.tabletier.TableTierNewGameViewModel
+import com.example.tabletoptoolbox.tabletier.TableTierNewGameViewModelFactory
+import com.example.tabletoptoolbox.tabletier.TableTierViewModel
+import com.example.tabletoptoolbox.tabletier.TableTierViewModelFactory
+import com.example.tabletoptoolbox.tabletier.TierListViewModel
+import com.example.tabletoptoolbox.tabletier.TierListViewModelFactory
 import com.example.tabletoptoolbox.ui.HomeScreen
 import com.example.tabletoptoolbox.ui.SettingsScreen
 import com.example.tabletoptoolbox.ui.common.GameScaffold
@@ -62,7 +76,6 @@ import com.example.tabletoptoolbox.uno.UnoViewModel
 import com.example.tabletoptoolbox.uno.UnoViewModelFactory
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.decodeFromString
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -81,6 +94,8 @@ class MainActivity : ComponentActivity() {
             val gradDrzavaRepository = remember { GradDrzavaRepository(prefs) }
             val belaRepository = remember { BelaRepository(prefs) }
             val unoRepository = remember { UnoRepository(prefs) }
+            val gameDatabase = remember { GameDatabase.getInstance(context) }
+            val gameRepository = remember { GameRepository(gameDatabase.gameDao()) }
             val inputStream = resources.openRawResource(R.raw.checkout_table)
             val json = inputStream.bufferedReader().use { it.readText() }
             val checkoutTable = remember { Json.decodeFromString<List<CheckoutTable>>(json) }
@@ -95,6 +110,22 @@ class MainActivity : ComponentActivity() {
             )
             val unoViewModel: UnoViewModel = viewModel(
                 factory = UnoViewModelFactory(unoRepository)
+            )
+
+            val tableTierViewModel: TableTierViewModel = viewModel(
+                factory = TableTierViewModelFactory(gameRepository)
+            )
+
+            val tierListViewModel: TierListViewModel = viewModel(
+                factory = TierListViewModelFactory(gameRepository)
+            )
+
+            val newGameViewModel: TableTierNewGameViewModel = viewModel(
+                factory = TableTierNewGameViewModelFactory(gameRepository)
+            )
+
+            val eloQuizViewModel: EloQuizViewModel = viewModel(
+                factory = EloQuizViewModelFactory(gameRepository)
             )
 
             var themeMode by remember { mutableStateOf(ThemeMode.LIGHT) }
@@ -309,6 +340,82 @@ class MainActivity : ComponentActivity() {
                             title = "Uno",
                             onArrowClick = "uno",
                             content = { UnoRoundsList(navController, buttonColors, unoViewModel) }
+                        )
+                    }
+                    composable("tableTier"){
+                        GameScaffold(
+                            navController,
+                            buttonColors,
+                            title = "Table Tier",
+                            onArrowClick = "home",
+                            content = { MainPagerScreen(navController, buttonColors, tableTierViewModel, tierListViewModel) }
+                        )
+                    }
+                    composable(
+                        route = "tableTierNewGame?gameId={gameId}",
+                        arguments = listOf(
+                            navArgument("gameId") {
+                                type = NavType.LongType
+                                defaultValue = -1L
+                            }
+                        )
+                    ) { backStackEntry ->
+                        val gameId = backStackEntry.arguments?.getLong("gameId") ?: -1L
+                        GameScaffold(
+                            navController,
+                            buttonColors,
+                            title = "Nova Igra",
+                            onArrowClick = "tableTier",
+                            content = {
+                                TableTierNewGame(
+                                    navController = navController,
+                                    buttonColors = buttonColors,
+                                    viewModel = newGameViewModel,
+                                    gameId = if (gameId == -1L) null else gameId
+                                )
+                            }
+                        )
+                    }
+                    composable("elo") {
+                        GameScaffold(
+                            navController,
+                            buttonColors,
+                            title = "Elo Procjena",
+                            onArrowClick = "tableTier",
+                            content = { EloScreen(navController, buttonColors) }
+                        )
+                    }
+
+                    composable(
+                        route = "eloQuiz?gameId={gameId}",
+                        arguments = listOf(
+                            navArgument("gameId") {
+                                type = NavType.LongType
+                                defaultValue = -1L
+                            }
+                        )
+                    ) { backStackEntry ->
+                        val gameIdArg = backStackEntry.arguments?.getLong("gameId") ?: -1L
+                        val targetGameId = if (gameIdArg == -1L) null else gameIdArg
+
+                        val eloQuizViewModel: EloQuizViewModel = viewModel(
+                            factory = EloQuizViewModelFactory(gameRepository, targetGameId)
+                        )
+                        GameScaffold(
+                            navController,
+                            buttonColors,
+                            title = "Elo Procjena",
+                            onArrowClick = "tableTier",
+                            content = { EloQuizScreen(navController, buttonColors, eloQuizViewModel) }
+                        )
+                    }
+                    composable("eloQuiz"){
+                        GameScaffold(
+                            navController,
+                            buttonColors,
+                            title = "Elo Procjena",
+                            onArrowClick = "elo",
+                            content = { EloQuizScreen(navController, buttonColors, eloQuizViewModel) }
                         )
                     }
                 }
