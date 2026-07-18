@@ -20,7 +20,7 @@ import androidx.navigation.NavController
  * Prikazuje menu za odabir nove ili postojeće igre pikada
  */
 @Composable
-fun DartsMenu(navController: NavController, buttonColors: ButtonColors) {
+fun DartsMenu(navController: NavController, buttonColors: ButtonColors, loaded: Boolean) {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     Column(
@@ -46,7 +46,8 @@ fun DartsMenu(navController: NavController, buttonColors: ButtonColors) {
             modifier = Modifier
                 .padding(8.dp)
                 .width(screenWidth / 1.1f),
-            colors = buttonColors
+            colors = buttonColors,
+            enabled = !loaded
         ) {
             Text(
                 text = "Nastavi Igru",

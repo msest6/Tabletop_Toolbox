@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 
 @Composable
-fun UnoMenu(navController: NavController, buttonColors: ButtonColors) {
+fun UnoMenu(navController: NavController, buttonColors: ButtonColors, loaded: Boolean) {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     Column(
@@ -43,7 +43,8 @@ fun UnoMenu(navController: NavController, buttonColors: ButtonColors) {
             modifier = Modifier
                 .padding(8.dp)
                 .width(screenWidth / 1.1f),
-            colors = buttonColors
+            colors = buttonColors,
+            enabled = !loaded
         ) {
             Text(
                 text = "Nastavi Igru",

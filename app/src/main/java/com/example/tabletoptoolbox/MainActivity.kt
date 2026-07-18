@@ -175,7 +175,7 @@ class MainActivity : ComponentActivity() {
                             buttonColors,
                             title = "Pikado",
                             onArrowClick = "home",
-                            content = { DartsMenu(navController, buttonColors) }
+                            content = { DartsMenu(navController, buttonColors, dartsViewModel.playerNames.isEmpty()) }
                         )
                     }
 
@@ -244,7 +244,7 @@ class MainActivity : ComponentActivity() {
                             buttonColors,
                             title = "Država Grad",
                             onArrowClick = "home",
-                            content = { GradDrzavaMenu(navController, buttonColors) }
+                            content = { GradDrzavaMenu(navController, buttonColors, gradDrzavaViewModel.categories.isEmpty()) }
                         )
                     }
                     composable("gradDrzavaNewGame") {
@@ -312,7 +312,7 @@ class MainActivity : ComponentActivity() {
                             buttonColors,
                             title = "Uno",
                             onArrowClick = "home",
-                            content = { UnoMenu(navController, buttonColors) }
+                            content = { UnoMenu(navController, buttonColors, unoViewModel.players.isEmpty()) }
                         )
                     }
                     composable("unoNewGame"){

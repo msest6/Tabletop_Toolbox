@@ -72,17 +72,6 @@ fun DartsMovesList(navController: NavController, buttonColors: ButtonColors, vie
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             Button(
-                onClick = { navController.navigate("darts") },
-                modifier = Modifier.padding(10.dp)
-            ) {
-                Text(
-                    text = "Odustani",
-                    modifier = Modifier.padding(15.dp),
-                    textAlign = TextAlign.Center,
-                    fontSize = (screenWidth.value * 0.05f).sp
-                )
-            }
-            Button(
                 onClick = {
                     viewModel.commitMovesEdit(draftMoves, draftCurrentPlayer)
                     navController.navigate("darts")

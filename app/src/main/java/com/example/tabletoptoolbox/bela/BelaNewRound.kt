@@ -61,6 +61,7 @@ fun BelaNewRound(navController: NavController, buttonColors: ButtonColors, viewM
     var showError by remember { mutableStateOf(false) }
     var showError2 by remember { mutableStateOf(false) }
     var showError3 by remember { mutableStateOf(false) }
+    var showError4 by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
     var zvaoIndex by remember(mode) { mutableStateOf<Int?>(null) }
     var belotConfirmIndex by remember(mode) { mutableStateOf<Int?>(null) }
@@ -92,7 +93,6 @@ fun BelaNewRound(navController: NavController, buttonColors: ButtonColors, viewM
             // Netko je pokupio sve bodove - ostali automatski idu na 0 (vrijedi za sve modove).
             for (i in updated.indices) {
                 if (i != index) updated[i] = "0"
-                else addZvanja(i, "90")
             }
         } else if (mode.supportsAutoFill && mode.columnCount == 2) {
             val otherIndex = 1 - index
@@ -379,6 +379,13 @@ fun BelaNewRound(navController: NavController, buttonColors: ButtonColors, viewM
                     color = MaterialTheme.colorScheme.error
                 )
             }
+            if (showError4) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "⚠️ Pogrešan unos zvanja!",
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
             LaunchedEffect(showError) {
                 if (showError) {
                     delay(10000)
@@ -397,6 +404,12 @@ fun BelaNewRound(navController: NavController, buttonColors: ButtonColors, viewM
                     showError3 = false
                 }
             }
+            LaunchedEffect(showError4) {
+                if (showError4) {
+                    delay(10000)
+                    showError4 = false
+                }
+            }
 
             Spacer(modifier = Modifier.height(32.dp))
 
@@ -405,26 +418,19 @@ fun BelaNewRound(navController: NavController, buttonColors: ButtonColors, viewM
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Button(
-                    onClick = { navController.navigate("bela") },
-                    modifier = Modifier
-                        .width(screenWidth / 3)
-                        .height(screenWidth / 7),
-                    colors = buttonColors,
-                    contentPadding = PaddingValues(2.dp)
-                ) {
-                    Text(text = "Odustani", fontSize = (screenWidth.value * 0.05f).sp)
-                }
-                Button(
                     onClick = {
                         val scores = scoreFields.value.map { it.toIntOrNull() }
                         val zvanja = zvanjaFields.value.map { it.toIntOrNull() ?: 0 }
                         val total = scores.indices.sumOf { i -> (scores[i] ?: 0) }
+                        val totalZvanja = zvanja.indices.sumOf { i -> (zvanja[i] ?: 0) }
                         if (scores.any { it == null }) {
                             showError = true
                         } else if (total != 162 && mode != BelaMode.TWO_CLOSED){
                             showError2 = true
                         } else if (total > 162) {
                             showError3 = true
+                        } else if (totalZvanja % 10 != 0) {
+                            showError4 = true
                         }
                         else {
                             viewModel.addRound(
@@ -449,7 +455,7 @@ fun BelaNewRound(navController: NavController, buttonColors: ButtonColors, viewM
             AlertDialog(
                 onDismissRequest = { belotConfirmIndex = null },
                 title = { Text("Potvrda belota") },
-                text = { Text("Je li tim \"${viewModel.columnLabel(col)}\" ostvario belot (sve štihove)?") },
+                text = { Text("Je li tim \"${viewModel.columnLabel(col)}\" ostvario belot?") },
                 confirmButton = {
                     Button(
                         onClick = {

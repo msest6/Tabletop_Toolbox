@@ -129,6 +129,7 @@ fun GradDrzava(
                         .onFocusChanged { focusState ->
                             isLetterFieldFocused = focusState.isFocused
                             if (!focusState.isFocused) {
+                                letterField = TextFieldValue(letterField.text.uppercase())
                                 if (!viewModel.trySetCurrentLetter(letterField.text)) {
                                     letterField = TextFieldValue(viewModel.currentLetter)
                                     showError1 = true
@@ -232,7 +233,7 @@ fun GradDrzava(
                         modifier = Modifier.padding(12.dp)
                     ) {
                         Text(
-                            text = "⚠️ Unos u polje za slovo mora biti veliko slovo abecede!",
+                            text = "⚠️ Unos u polje za slovo mora biti jedno slovo abecede!",
                             color = MaterialTheme.colorScheme.onErrorContainer,
                             modifier = Modifier.weight(1f)
                         )

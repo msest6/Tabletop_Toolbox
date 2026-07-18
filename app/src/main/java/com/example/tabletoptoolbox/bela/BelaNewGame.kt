@@ -122,16 +122,6 @@ fun BelaNewGame(navController: NavController, buttonColors: ButtonColors, viewMo
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Button(
-                    onClick = { navController.navigate("home") },
-                    modifier = Modifier
-                        .width(screenWidth / 3)
-                        .height(screenWidth / 7),
-                    colors = buttonColors,
-                    contentPadding = PaddingValues(2.dp)
-                ) {
-                    Text(text = "Odustani", fontSize = (screenWidth.value * 0.05f).sp)
-                }
-                Button(
                     onClick = {
                         val playerNames = names.mapIndexed { i, n ->
                             n.trim().ifBlank { labels.getOrElse(i) { "Igrač ${i + 1}" } }
@@ -150,7 +140,7 @@ fun BelaNewGame(navController: NavController, buttonColors: ButtonColors, viewMo
                     colors = buttonColors,
                     contentPadding = PaddingValues(2.dp)
                 ) {
-                    Text(text = "Nastavi", fontSize = (screenWidth.value * 0.05f).sp)
+                    Text(text = "Započni partiju", fontSize = (screenWidth.value * 0.05f).sp)
                 }
             }
         }

@@ -67,8 +67,9 @@ class GradDrzavaViewModel(private val repository: GradDrzavaRepository) : ViewMo
 
     /** Pokušava postaviti novo trenutno slovo iz tekstualnog unosa. Vraća false ako slovo nije valjano. */
     fun trySetCurrentLetter(letter: String): Boolean {
-        if (!isValidLetter(letter)) return false
-        applyNewLetter(letter)
+        val upperLetter = letter.uppercase()
+        if (!isValidLetter(upperLetter)) return false
+        applyNewLetter(upperLetter)
         return true
     }
 
