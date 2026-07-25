@@ -8,7 +8,7 @@ import kotlin.random.Random
 
 class SwissTournament(
     games: List<GameEntity>,
-    startingElo: Double = 1200.0,
+    private val startingElo: Double = 1200.0,
     private val random: Random = Random.Default
 ) {
 
@@ -54,7 +54,6 @@ class SwissTournament(
     /** Bilježi ishod SAMO u memoriju (standings). Ništa se ne piše u bazu ovdje. */
     fun submitResult(winnerId: Long): Boolean {
         val m = queue.firstOrNull() ?: return false
-        // zaštita od dvostrukog klika / stale odabira
         if (winnerId != m.a && winnerId != m.b) return false
         queue.removeFirst()
 
@@ -75,13 +74,6 @@ class SwissTournament(
         if (queue.isEmpty() && round < totalRounds) buildNextRound()
         return true
     }
-
-    /**
-     * Konačno stanje za SVE igre (id -> elo, broj usporedbi).
-     * Poziva se tek kad je kviz gotov; tek se tada piše u bazu.
-     */
-    fun results(): List<EloUpdate> =
-        standings.values.map { EloUpdate(it.id, it.elo, it.comparisonCount) }
 
     private fun buildNextRound() {
         if (round >= totalRounds) return
@@ -116,5 +108,41 @@ class SwissTournament(
 
         matches.shuffle(random) // izmiješaj redoslijed prikaza unutar runde
         queue = ArrayDeque(matches)
+    }
+    /** Buchholz = zbroj pobjeda svih protivnika s kojima je igra odigrala. Veći = jači protivnici. */
+    private fun buchholzOf(s: Standing): Int =
+        s.opponents.sumOf { standings.getValue(it).wins }
+
+    /**
+     * Konačni Elo za SVE igre - poziva se tek kad je kviz gotov, tek se tada piše u bazu.
+     * Primarno: broj pobjeda (grupe razmaknute za ELO_PER_WIN).
+     * Tiebreak: unutar iste grupe razmicanje po Buchholzu, ograničeno tako da se
+     * igra NIKAD ne prelije u susjednu grupu (pomak < pola koraka).
+     */
+    fun results(): List<EloUpdate> {
+        val all = standings.values.toList()
+        if (all.isEmpty()) return emptyList()
+
+        val meanBuchholzByWins = all
+            .groupBy { it.wins }
+            .mapValues { (_, grupa) -> grupa.map { buchholzOf(it) }.average() }
+
+        return all.map { s ->
+            val groupMean = meanBuchholzByWins.getValue(s.wins)
+            val shift = (BUCHHOLZ_WEIGHT * (buchholzOf(s) - groupMean))
+                .coerceIn(-BUCHHOLZ_MAX_SHIFT, BUCHHOLZ_MAX_SHIFT)
+
+            val finalElo = startingElo + ELO_PER_WIN * (s.wins - totalRounds / 2.0) + shift
+            EloUpdate(s.id, finalElo, s.comparisonCount)
+        }
+    }
+
+    private companion object {
+        /** Korak Ela po pobjedi (= K iz EloEngine). Win-grupe su za toliko razmaknute. */
+        const val ELO_PER_WIN = 32.0
+        /** Max pomak od Buchholza. MORA biti < ELO_PER_WIN / 2 da se grupe ne preklope. */
+        const val BUCHHOLZ_MAX_SHIFT = 15.0
+        /** Ela po jedinici razlike Buchholza naspram prosjeka grupe. Podesivo. */
+        const val BUCHHOLZ_WEIGHT = 2.0
     }
 }

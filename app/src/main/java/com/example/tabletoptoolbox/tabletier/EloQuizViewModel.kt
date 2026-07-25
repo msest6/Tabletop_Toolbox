@@ -204,15 +204,14 @@ class EloQuizViewModel(
     private fun onSwissGameChosen(chosen: GameEntity) {
         val tournament = swiss ?: return
         viewModelScope.launch {
-            val applied = tournament.submitResult(chosen.id)   // samo u memoriju
+            val applied = tournament.submitResult(chosen.id)   // samo memorija
 
-            // Tek kad je kviz gotov -> trajno spremi cijelu mapu (id -> elo) u bazu.
             if (applied && tournament.isFinished) {
+                // sad su SVE pobjede poznate -> Buchholz + upis
                 tournament.results().forEach { u ->
                     repository.updateElo(u.id, u.elo, u.comparisonCount)
                 }
             }
-
             presentSwissQuestion()
         }
     }

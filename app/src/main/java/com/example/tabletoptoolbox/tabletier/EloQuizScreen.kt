@@ -164,14 +164,6 @@ private fun GameChoiceCard(
                     .clip(RoundedCornerShape(8.dp)),
                 contentScale = ContentScale.Crop
             )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = String.format("Ocjena: %.1f", game.userRating),
-                style = MaterialTheme.typography.bodyMedium,
-                textAlign = TextAlign.Center
-            )
         }
     }
 }
