@@ -59,6 +59,7 @@ import com.example.tabletoptoolbox.tabletier.MainPagerScreen
 import com.example.tabletoptoolbox.tabletier.TableTierNewGame
 import com.example.tabletoptoolbox.tabletier.TableTierNewGameViewModel
 import com.example.tabletoptoolbox.tabletier.TableTierNewGameViewModelFactory
+import com.example.tabletoptoolbox.tabletier.TableTierSettingsScreen
 import com.example.tabletoptoolbox.tabletier.TableTierViewModel
 import com.example.tabletoptoolbox.tabletier.TableTierViewModelFactory
 import com.example.tabletoptoolbox.tabletier.TierListViewModel
@@ -122,10 +123,6 @@ class MainActivity : ComponentActivity() {
 
             val newGameViewModel: TableTierNewGameViewModel = viewModel(
                 factory = TableTierNewGameViewModelFactory(gameRepository)
-            )
-
-            val eloQuizViewModel: EloQuizViewModel = viewModel(
-                factory = EloQuizViewModelFactory(gameRepository)
             )
 
             var themeMode by remember { mutableStateOf(ThemeMode.LIGHT) }
@@ -348,6 +345,7 @@ class MainActivity : ComponentActivity() {
                             buttonColors,
                             title = "Table Tier",
                             onArrowClick = "home",
+                            settingsRoute = "tableTierSettings",
                             content = { MainPagerScreen(navController, buttonColors, tableTierViewModel, tierListViewModel) }
                         )
                     }
@@ -366,6 +364,7 @@ class MainActivity : ComponentActivity() {
                             buttonColors,
                             title = "Nova Igra",
                             onArrowClick = "tableTier",
+                            settingsRoute = "tableTierSettings",
                             content = {
                                 TableTierNewGame(
                                     navController = navController,
@@ -382,6 +381,7 @@ class MainActivity : ComponentActivity() {
                             buttonColors,
                             title = "Elo Procjena",
                             onArrowClick = "tableTier",
+                            settingsRoute = "tableTierSettings",
                             content = { EloScreen(navController, buttonColors) }
                         )
                     }
@@ -406,16 +406,20 @@ class MainActivity : ComponentActivity() {
                             buttonColors,
                             title = "Elo Procjena",
                             onArrowClick = "tableTier",
+                            settingsRoute = "tableTierSettings",
                             content = { EloQuizScreen(navController, buttonColors, eloQuizViewModel) }
                         )
                     }
-                    composable("eloQuiz"){
-                        GameScaffold(
-                            navController,
-                            buttonColors,
-                            title = "Elo Procjena",
-                            onArrowClick = "elo",
-                            content = { EloQuizScreen(navController, buttonColors, eloQuizViewModel) }
+                    composable("tableTierSettings") {
+                        TableTierSettingsScreen(
+                            navController = navController,
+                            buttonColors = buttonColors,
+                            themeMode = themeMode,
+                            onThemeChange = { newTheme ->
+                                themeMode = newTheme
+                                scope.launch { themeRepository.setThemeMode(newTheme) }
+                            },
+                            repository = gameRepository
                         )
                     }
                 }

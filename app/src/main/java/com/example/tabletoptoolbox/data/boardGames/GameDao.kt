@@ -24,6 +24,12 @@ interface GameDao {
     @Update
     suspend fun updateGame(game: GameEntity)
 
+    @Query("UPDATE games SET eloRating = :startElo, comparisonCount = 0")
+    suspend fun resetAllElo(startElo: Double)
+
+    @Query("UPDATE games SET eloRating = :elo, comparisonCount = :count WHERE id = :id")
+    suspend fun updateElo(id: Long, elo: Double, count: Int)
+
     @Insert
     suspend fun insertGame(game: GameEntity): Long
 

@@ -47,5 +47,9 @@ class GameRepository(private val gameDao: GameDao) {
 
     suspend fun updateGame(game: GameEntity) = gameDao.updateGame(game)
 
+    suspend fun resetAllElo(startElo: Double = 1200.0) = gameDao.resetAllElo(startElo)
+
+    suspend fun updateElo(id: Long, elo: Double, count: Int) = gameDao.updateElo(id, elo, count)
+
     suspend fun deleteGame(game: GameEntity) = gameDao.deleteGame(game)
 }

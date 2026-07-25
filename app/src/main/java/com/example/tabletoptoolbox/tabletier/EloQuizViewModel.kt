@@ -23,9 +23,8 @@ data class EloQuizUiState(
 )
 
 /**
- * targetGameId == null -> puna re-evaluacija cijele baze (sporiji, temeljitiji proces).
- * targetGameId != null -> brzi insert: samo ta jedna igra se umeće među ostale
- *                         binarnom pretragom, ostale se ne diraju.
+ * targetGameId == null -> puna re-evaluacija: Swiss turnir (sve na 1200, uparivanje po pobjedama).
+ * targetGameId != null -> brzi insert: samo ta jedna igra se umeće binarnom pretragom (nepromijenjeno).
  */
 class EloQuizViewModel(
     private val repository: GameRepository,
@@ -35,39 +34,40 @@ class EloQuizViewModel(
     private val _uiState = MutableStateFlow(EloQuizUiState())
     val uiState: StateFlow<EloQuizUiState> = _uiState.asStateFlow()
 
+    // --- Brzi insert (nova igra): binarno umetanje jedne igre ---
     private var batch: List<GameEntity> = emptyList()
     private var batchIndex = 0
-
     private var candidates: List<GameEntity> = emptyList()
     private var low = 0
     private var high = 0
     private var focusGame: GameEntity? = null
-
     private var totalQuestions = 0
     private var questionsAskedSoFar = 0
 
+    // --- Puna re-evaluacija: Swiss turnir ---
+    private var swiss: SwissTournament? = null
+
     init {
         viewModelScope.launch {
-            val allGames = repository.getAllGames().first()
-            startSession(allGames)
+            if (targetGameId != null) {
+                val allGames = repository.getAllGames().first()
+                startQuickInsertSession(allGames)
+            } else {
+                startSwissSession()
+            }
         }
     }
 
-    private fun startSession(allGames: List<GameEntity>) {
-        if (targetGameId != null) {
-            startQuickInsertSession(allGames)
-        } else {
-            startFullReEvaluationSession(allGames)
-        }
-    }
+    // ============================================================
+    //  BRZI INSERT (nova igra) - nepromijenjeno ponašanje
+    // ============================================================
 
-    /** Brzi mod: fokus je isključivo novo dodana igra, umeće se među sve ostale. */
     private fun startQuickInsertSession(allGames: List<GameEntity>) {
         val newGame = allGames.find { it.id == targetGameId }
         val others = allGames.filter { it.id != targetGameId }
 
         if (newGame == null || others.isEmpty()) {
-            // nema s čime usporediti (npr. ovo je prva igra u bazi) - odmah gotovo, ostaje default elo
+            // nema s čime usporediti (npr. prva igra u bazi) - odmah gotovo, ostaje default elo
             _uiState.update { it.copy(isLoading = false, isFinished = true) }
             return
         }
@@ -76,23 +76,6 @@ class EloQuizViewModel(
         batchIndex = 0
 
         totalQuestions = EloEngine.questionsNeededForPool(others.size)
-        questionsAskedSoFar = 0
-
-        setupNextFocusGame(allGames)
-    }
-
-    /** Puni mod: sve igre iz baze prolaze kroz binarno umetanje, počevši od najmanje uspoređivanih. */
-    private fun startFullReEvaluationSession(allGames: List<GameEntity>) {
-        if (allGames.size < 2) {
-            _uiState.update { it.copy(isLoading = false, notEnoughGames = true) }
-            return
-        }
-
-        batch = allGames.sortedBy { it.comparisonCount }
-        batchIndex = 0
-
-        val poolSize = allGames.size - 1
-        totalQuestions = EloEngine.questionsNeededForPool(poolSize) * batch.size
         questionsAskedSoFar = 0
 
         setupNextFocusGame(allGames)
@@ -112,10 +95,10 @@ class EloQuizViewModel(
         low = 0
         high = candidates.lastIndex
 
-        presentCurrentQuestion()
+        presentQuickInsertQuestion()
     }
 
-    private fun presentCurrentQuestion() {
+    private fun presentQuickInsertQuestion() {
         val focus = focusGame
 
         if (focus == null || low > high || candidates.isEmpty()) {
@@ -142,7 +125,7 @@ class EloQuizViewModel(
         }
     }
 
-    fun onGameChosen(chosen: GameEntity) {
+    private fun onQuickInsertGameChosen(chosen: GameEntity) {
         val focus = focusGame ?: return
         val mid = (low + high) / 2
         val opponent = candidates[mid]
@@ -177,7 +160,70 @@ class EloQuizViewModel(
             }
 
             questionsAskedSoFar++
-            presentCurrentQuestion()
+            presentQuickInsertQuestion()
+        }
+    }
+
+    // ============================================================
+    //  PUNA RE-EVALUACIJA - Swiss turnir
+    // ============================================================
+
+    private suspend fun startSwissSession() {
+        val games = repository.getAllGames().first()
+
+        if (games.size < 2) {
+            _uiState.update { it.copy(isLoading = false, notEnoughGames = true) }
+            return
+        }
+
+        swiss = SwissTournament(games)
+        presentSwissQuestion()
+    }
+
+    private fun presentSwissQuestion() {
+        val tournament = swiss ?: return
+        val pair = tournament.currentPair()
+
+        if (pair == null || tournament.isFinished) {
+            _uiState.update { it.copy(isLoading = false, isFinished = true) }
+            return
+        }
+
+        _uiState.update {
+            it.copy(
+                isLoading = false,
+                currentQuestionNumber = tournament.questionsAsked + 1,
+                totalQuestions = tournament.totalQuestions,
+                leftGame = pair.first,
+                rightGame = pair.second,
+                isFinished = false
+            )
+        }
+    }
+
+    private fun onSwissGameChosen(chosen: GameEntity) {
+        val tournament = swiss ?: return
+        viewModelScope.launch {
+            val applied = tournament.submitResult(chosen.id)   // samo u memoriju
+
+            // Tek kad je kviz gotov -> trajno spremi cijelu mapu (id -> elo) u bazu.
+            if (applied && tournament.isFinished) {
+                tournament.results().forEach { u ->
+                    repository.updateElo(u.id, u.elo, u.comparisonCount)
+                }
+            }
+
+            presentSwissQuestion()
+        }
+    }
+
+    // ============================================================
+
+    fun onGameChosen(chosen: GameEntity) {
+        if (swiss != null) {
+            onSwissGameChosen(chosen)
+        } else {
+            onQuickInsertGameChosen(chosen)
         }
     }
 }

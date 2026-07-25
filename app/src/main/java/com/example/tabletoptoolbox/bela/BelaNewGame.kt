@@ -135,8 +135,8 @@ fun BelaNewGame(navController: NavController, buttonColors: ButtonColors, viewMo
                         navController.navigate("bela")
                     },
                     modifier = Modifier
-                        .width(screenWidth / 3)
-                        .height(screenWidth / 7),
+                        .width(screenWidth / 2)
+                        .height(screenWidth / 6),
                     colors = buttonColors,
                     contentPadding = PaddingValues(2.dp)
                 ) {
