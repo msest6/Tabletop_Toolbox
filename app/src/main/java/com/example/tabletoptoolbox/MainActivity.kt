@@ -42,6 +42,7 @@ import com.example.tabletoptoolbox.data.GradDrzavaRepository
 import com.example.tabletoptoolbox.data.PreferencesDataStore
 import com.example.tabletoptoolbox.data.ThemeRepository
 import com.example.tabletoptoolbox.data.UnoRepository
+import com.example.tabletoptoolbox.data.WheelRepository
 import com.example.tabletoptoolbox.data.boardGames.GameDatabase
 import com.example.tabletoptoolbox.data.boardGames.GameRepository
 import com.example.tabletoptoolbox.data.model.CheckoutTable
@@ -75,6 +76,11 @@ import com.example.tabletoptoolbox.uno.UnoNewRound
 import com.example.tabletoptoolbox.uno.UnoRoundsList
 import com.example.tabletoptoolbox.uno.UnoViewModel
 import com.example.tabletoptoolbox.uno.UnoViewModelFactory
+import com.example.tabletoptoolbox.wheelOfNames.WheelDetail
+import com.example.tabletoptoolbox.wheelOfNames.WheelDetailViewModel
+import com.example.tabletoptoolbox.wheelOfNames.WheelOfNames
+import com.example.tabletoptoolbox.wheelOfNames.WheelViewModel
+import com.example.tabletoptoolbox.wheelOfNames.WheelViewModelFactory
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 
@@ -125,6 +131,11 @@ class MainActivity : ComponentActivity() {
                 factory = TableTierNewGameViewModelFactory(gameRepository)
             )
 
+            val wheelRepository = remember { WheelRepository(prefs) }
+            val wheelViewModel: WheelViewModel = viewModel(
+                factory = WheelViewModelFactory(wheelRepository)
+            )
+
             var themeMode by remember { mutableStateOf(ThemeMode.LIGHT) }
 
             LaunchedEffect(Unit) {
@@ -134,6 +145,7 @@ class MainActivity : ComponentActivity() {
                 dartsViewModel.loadIfNeeded()
                 belaViewModel.loadIfNeeded()
                 unoViewModel.loadIfNeeded()
+                wheelViewModel.loadIfNeeded()
             }
 
             GameHubTheme(themeMode) {
@@ -420,6 +432,44 @@ class MainActivity : ComponentActivity() {
                                 scope.launch { themeRepository.setThemeMode(newTheme) }
                             },
                             repository = gameRepository
+                        )
+                    }
+                    composable("wheelOfNames") {
+                        GameScaffold(
+                            navController,
+                            buttonColors,
+                            title = "Kolo",
+                            onArrowClick = "home",
+                            content = { WheelOfNames(navController, buttonColors, wheelViewModel) }
+                        )
+                    }
+                    composable("wheelNew") {
+                        val detailViewModel: WheelDetailViewModel = viewModel()
+                        LaunchedEffect(Unit) {
+                            detailViewModel.load(null)            // prazan default, id = null
+                        }
+                        GameScaffold(
+                            navController, buttonColors,
+                            title = "Novo kolo",
+                            onArrowClick = "wheelOfNames",
+                            content = { WheelDetail(navController, buttonColors, wheelViewModel, detailViewModel) }
+                        )
+                    }
+
+                    composable(
+                        route = "wheel/{wheelId}",
+                        arguments = listOf(navArgument("wheelId") { type = NavType.StringType })
+                    ) { backStackEntry ->
+                        val wheelId = backStackEntry.arguments?.getString("wheelId")
+                        val detailViewModel: WheelDetailViewModel = viewModel()
+                        LaunchedEffect(wheelId) {
+                            detailViewModel.load(wheelId?.let { wheelViewModel.getWheel(it) })
+                        }
+                        GameScaffold(
+                            navController, buttonColors,
+                            title = "Kolo",
+                            onArrowClick = "wheelOfNames",
+                            content = { WheelDetail(navController, buttonColors, wheelViewModel, detailViewModel) }
                         )
                     }
                 }

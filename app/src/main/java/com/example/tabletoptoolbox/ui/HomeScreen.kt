@@ -35,7 +35,8 @@ fun HomeScreen(navController: NavController, buttonColors: ButtonColors) {
         MenuItem("boardGames", "Društvene Igre"),
         MenuItem("dartsMenu", "Pikado kalkulator"),
         MenuItem("gradDrzavaMenu", "Država Grad"),
-        MenuItem("tableTier", "Table Tier")
+        MenuItem("tableTier", "Table Tier"),
+        MenuItem("wheelOfNames", "Wheel Of Names")
     )
 
     LazyColumn(
