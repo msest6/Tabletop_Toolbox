@@ -41,10 +41,27 @@ fun WheelCanvas(
     highlightIndex: Int? = null
 ) {
     Canvas(modifier = modifier) {
-        if (entries.isEmpty()) return@Canvas
-
         val center = Offset(size.width / 2f, size.height / 2f)
         val radius = size.minDimension / 2f
+
+        // Prazna lista → sivi krug + pokazivač, pa izlaz
+        if (entries.isEmpty()) {
+            drawCircle(
+                color = Color(0xFFBDBDBD),
+                radius = radius,
+                center = center
+            )
+            val pEmpty = radius * 0.07f
+            val pointerEmpty = Path().apply {
+                moveTo(center.x - pEmpty, center.y - radius)
+                lineTo(center.x + pEmpty, center.y - radius)
+                lineTo(center.x, center.y - radius * 0.86f)
+                close()
+            }
+            drawPath(pointerEmpty, Color.Black)
+            return@Canvas
+        }
+
         val sliceAngle = 360f / entries.size
         val showText = sliceAngle >= 6f          // ispod ~60 entryja tekst je ionako nečitljiv
 

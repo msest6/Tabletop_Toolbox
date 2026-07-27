@@ -17,6 +17,8 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 
@@ -35,6 +37,7 @@ fun WheelDetail(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(12.dp)
             .pointerInput(Unit) {
                 detectTapGestures(onTap = { focusManager.clearFocus() })
@@ -65,6 +68,7 @@ fun WheelDetail(
                 .fillMaxWidth()
                 .aspectRatio(1f)
                 .clickable(enabled = !detailViewModel.isSpinning) {
+                    focusManager.clearFocus()
                     scope.launch { detailViewModel.spin() }
                 },
             rotationDeg = detailViewModel.rotationDeg,
@@ -103,12 +107,12 @@ fun WheelDetail(
                 detailViewModel.entriesText = it
                 detailViewModel.clearEntriesError()
             },
-            label = { Text("Stavke (jedna po retku)") },
+            label = { Text("Stavke") },
             isError = detailViewModel.entriesError != null,
             supportingText = {
                 detailViewModel.entriesError?.let { Text(it) }
             },
-            modifier = Modifier.fillMaxWidth().weight(1f)
+            modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(Modifier.height(8.dp))
