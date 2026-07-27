@@ -32,11 +32,11 @@ fun HomeScreen(navController: NavController, buttonColors: ButtonColors) {
     val items = listOf(
         MenuItem("belaMenu", "Bela kalkulator"),
         MenuItem("unoMenu", "Uno Kalkulator"),
-        MenuItem("boardGames", "Društvene Igre"),
         MenuItem("dartsMenu", "Pikado kalkulator"),
+        MenuItem("wheelOfNames", "Wheel Of Names"),
         MenuItem("gradDrzavaMenu", "Država Grad"),
-        MenuItem("tableTier", "Table Tier"),
-        MenuItem("wheelOfNames", "Wheel Of Names")
+        MenuItem("boardGames", "Društvene Igre"),
+        MenuItem("tableTier", "Table Tier")
     )
 
     LazyColumn(

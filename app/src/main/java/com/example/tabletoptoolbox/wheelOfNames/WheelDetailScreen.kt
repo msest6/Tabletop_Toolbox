@@ -18,8 +18,10 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import kotlinx.coroutines.launch
 
 @Composable
@@ -53,6 +55,9 @@ fun WheelDetail(
             label = { Text("Naslov") },
             singleLine = true,
             isError = detailViewModel.nameError != null,
+            keyboardOptions = KeyboardOptions(
+                capitalization = KeyboardCapitalization.Sentences
+            ),
             supportingText = {
                 detailViewModel.nameError?.let { Text(it) }
             },
@@ -109,6 +114,9 @@ fun WheelDetail(
             },
             label = { Text("Stavke") },
             isError = detailViewModel.entriesError != null,
+            keyboardOptions = KeyboardOptions(
+                capitalization = KeyboardCapitalization.Sentences
+            ),
             supportingText = {
                 detailViewModel.entriesError?.let { Text(it) }
             },
