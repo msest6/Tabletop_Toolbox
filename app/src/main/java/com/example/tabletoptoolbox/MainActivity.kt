@@ -83,11 +83,23 @@ import com.example.tabletoptoolbox.wheelOfNames.WheelViewModel
 import com.example.tabletoptoolbox.wheelOfNames.WheelViewModelFactory
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        // Crtaj preko cijelog ekrana (ispod sistemskih traka)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
+        val controller = WindowCompat.getInsetsController(window, window.decorView)
+        // Trake se pojave na swipe pa se same opet sakriju
+        controller.systemBarsBehavior =
+            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        // Sakrij i status bar (gore) i navigation bar (dolje)
+        controller.hide(WindowInsetsCompat.Type.systemBars())
         enableEdgeToEdge()
         setContent {
             val context = LocalContext.current
