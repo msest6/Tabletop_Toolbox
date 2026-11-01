@@ -1,12 +1,15 @@
 package com.example.tabletoptoolbox
 
 import android.content.pm.ActivityInfo
+import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -93,11 +96,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         val controller = WindowCompat.getInsetsController(window, window.decorView)
-        // Traka se pojavi na swipe pa se sama opet sakrije
-        controller.systemBarsBehavior =
-            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        // Sakrij SAMO navigation bar (dolje), status bar ostaje
-        controller.hide(WindowInsetsCompat.Type.navigationBars())
+        controller.show(WindowInsetsCompat.Type.systemBars()) // status + navigacijska traka
+        controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_DEFAULT
         setContent {
             val context = LocalContext.current
             val scope = rememberCoroutineScope()
@@ -155,6 +155,19 @@ class MainActivity : ComponentActivity() {
                 belaViewModel.loadIfNeeded()
                 unoViewModel.loadIfNeeded()
                 wheelViewModel.loadIfNeeded()
+            }
+
+            DisposableEffect(themeMode) {
+                val style = if (themeMode == ThemeMode.DARK)
+                    SystemBarStyle.dark(Color.TRANSPARENT)
+                else
+                    SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
+
+                this@MainActivity.enableEdgeToEdge(
+                    statusBarStyle = style,
+                    navigationBarStyle = style
+                )
+                onDispose { }
             }
 
             GameHubTheme(themeMode) {

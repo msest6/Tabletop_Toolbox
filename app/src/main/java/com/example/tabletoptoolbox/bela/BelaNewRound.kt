@@ -10,10 +10,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
@@ -119,364 +122,376 @@ fun BelaNewRound(navController: NavController, buttonColors: ButtonColors, viewM
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .imePadding()
             .pointerInput(Unit) {
                 detectTapGestures {
                     focusManager.clearFocus()
                 }
             }
     ) {
-        Button(
-            onClick = {
-                for (col in 0 until mode.columnCount){
-                    updateScore(col, "")
-                    updateZvanja(col, "")
-                }
-                zvaoIndex = null
-            },
+        Box(
             modifier = Modifier
-                .align(Alignment.TopEnd)
-                .width(screenWidth / 5),
-            colors = buttonColors,
-            contentPadding = PaddingValues(2.dp)
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp)
         ) {
-            Text(
-                text = "Reset",
-                fontSize = (screenWidth.value * 0.05f).sp
-            )
-        }
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Zove",
-                fontSize = (screenWidth.value * 0.07f).sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.tertiary,
-                modifier = Modifier.padding(bottom = 24.dp)
-            )
-            Row(
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                modifier = Modifier.fillMaxWidth()
+            Button(
+                onClick = {
+                    for (col in 0 until mode.columnCount) {
+                        updateScore(col, "")
+                        updateZvanja(col, "")
+                    }
+                    zvaoIndex = null
+                },
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .width(screenWidth / 5),
+                colors = buttonColors,
+                contentPadding = PaddingValues(2.dp)
             ) {
-                for (col in 0 until mode.columnCount) {
-                    var scoreFieldValue by remember(mode, col) {
-                        mutableStateOf(TextFieldValue(text = scoreFields.value[col]))
-                    }
-                    var zvanjaFieldValue by remember(mode, col) {
-                        mutableStateOf(TextFieldValue(text = zvanjaFields.value[col]))
-                    }
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        RadioButton(
-                            selected = zvaoIndex == col,
-                            onClick = {
-                                zvaoIndex = if (zvaoIndex == col) null else col
-                            }
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = viewModel.columnLabel(col),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = (screenWidth.value * 0.05f).sp
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        OutlinedTextField(
-                            value = scoreFieldValue,
-                            onValueChange = { newValue ->
-                                val newText = newValue.text
-                                if (newText.isEmpty() || (newText.toIntOrNull() != null && newText.toInt() <= 162)) {
-                                    updateScore(col, newText)
-                                    scoreFieldValue = newValue
-                                } else if (newText.toIntOrNull() != null && newText.toInt() > 162) {
-                                    updateScore(col, "162")
-                                    scoreFieldValue = newValue.copy(text = "162")
+                Text(
+                    text = "Reset",
+                    fontSize = (screenWidth.value * 0.05f).sp
+                )
+            }
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Zove",
+                    fontSize = (screenWidth.value * 0.07f).sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.tertiary,
+                    modifier = Modifier.padding(bottom = 24.dp)
+                )
+                Row(
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    for (col in 0 until mode.columnCount) {
+                        var scoreFieldValue by remember(mode, col) {
+                            mutableStateOf(TextFieldValue(text = scoreFields.value[col]))
+                        }
+                        var zvanjaFieldValue by remember(mode, col) {
+                            mutableStateOf(TextFieldValue(text = zvanjaFields.value[col]))
+                        }
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            RadioButton(
+                                selected = zvaoIndex == col,
+                                onClick = {
+                                    zvaoIndex = if (zvaoIndex == col) null else col
                                 }
-                            },
-                            label = { Text("Bodovi") },
-                            singleLine = true,
-                            modifier = Modifier
-                                .width(screenWidth / (mode.columnCount + 1))
-                                .onFocusChanged { focusState ->
-                                    if (focusState.isFocused) {
-                                        scoreFieldValue = scoreFieldValue.copy(
-                                            selection = TextRange(0, scoreFieldValue.text.length)
-                                        )
-                                    }
-                                },
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Number
                             )
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        OutlinedTextField(
-                            value = zvanjaFieldValue,
-                            onValueChange = { newValue ->
-                                updateZvanja(col, newValue.text)
-                                zvanjaFieldValue = newValue
-                            },
-                            label = { Text("Zvanja") },
-                            singleLine = true,
-                            modifier = Modifier
-                                .width(screenWidth / (mode.columnCount + 1))
-                                .onFocusChanged { focusState ->
-                                    if (focusState.isFocused) {
-                                        zvanjaFieldValue = zvanjaFieldValue.copy(
-                                            selection = TextRange(0, zvanjaFieldValue.text.length)
-                                        )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = viewModel.columnLabel(col),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = (screenWidth.value * 0.05f).sp
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            OutlinedTextField(
+                                value = scoreFieldValue,
+                                onValueChange = { newValue ->
+                                    val newText = newValue.text
+                                    if (newText.isEmpty() || (newText.toIntOrNull() != null && newText.toInt() <= 162)) {
+                                        updateScore(col, newText)
+                                        scoreFieldValue = newValue
+                                    } else if (newText.toIntOrNull() != null && newText.toInt() > 162) {
+                                        updateScore(col, "162")
+                                        scoreFieldValue = newValue.copy(text = "162")
                                     }
                                 },
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Number
-                            ),
-                            supportingText = {
-                                Text(
-                                    text = "Ukupno: ${(if (scoreFields.value[col] == "") 0 else scoreFields.value[col].toInt()) + (if (zvanjaFields.value[col] == "") 0 else zvanjaFields.value[col].toInt())}",
-                                    textAlign = TextAlign.End,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                            }
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(
-                          horizontalArrangement = Arrangement.SpaceEvenly
-                        ){
-                            Button(
-                                onClick = { addZvanja(col, "20") },
-                                modifier = Modifier
-                                    .width(screenWidth / 9)
-                                    .height(screenWidth / 9),
-                                colors = buttonColors,
-                                shape = RoundedCornerShape(8.dp),
-                                contentPadding = PaddingValues(2.dp)
-                            ) {
-                                Text(text = "20", fontSize = (screenWidth.value * 0.05f).sp)
-                            }
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Button(
-                                onClick = { addZvanja(col, "50") },
-                                modifier = Modifier
-                                    .width(screenWidth / 9)
-                                    .height(screenWidth / 9),
-                                colors = buttonColors,
-                                shape = RoundedCornerShape(8.dp),
-                                contentPadding = PaddingValues(2.dp)
-                            ) {
-                                Text(text = "50", fontSize = (screenWidth.value * 0.05f).sp)
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(
-                            horizontalArrangement = Arrangement.SpaceEvenly
-                        ){
-                            Button(
-                                onClick = { addZvanja(col, "90") },
-                                modifier = Modifier
-                                    .width(screenWidth / 9)
-                                    .height(screenWidth / 9),
-                                colors = buttonColors,
-                                shape = RoundedCornerShape(8.dp),
-                                contentPadding = PaddingValues(2.dp)
-                            ) {
-                                Text(text = "90", fontSize = (screenWidth.value * 0.05f).sp)
-                            }
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Button(
-                                onClick = { addZvanja(col, "100") },
-                                modifier = Modifier
-                                    .width(screenWidth / 9)
-                                    .height(screenWidth / 9),
-                                colors = buttonColors,
-                                shape = RoundedCornerShape(8.dp),
-                                contentPadding = PaddingValues(2.dp)
-                            ) {
-                                Text(text = "100", fontSize = (screenWidth.value * 0.05f).sp)
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(
-                            horizontalArrangement = Arrangement.SpaceEvenly
-                        ){
-                            Button(
-                                onClick = { addZvanja(col, "150") },
-                                modifier = Modifier
-                                    .width(screenWidth / 9)
-                                    .height(screenWidth / 9),
-                                colors = buttonColors,
-                                shape = RoundedCornerShape(8.dp),
-                                contentPadding = PaddingValues(2.dp)
-                            ) {
-                                Text(text = "150", fontSize = (screenWidth.value * 0.05f).sp)
-                            }
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Button(
-                                onClick = { addZvanja(col, "200") },
-                                modifier = Modifier
-                                    .width(screenWidth / 9)
-                                    .height(screenWidth / 9),
-                                colors = buttonColors,
-                                shape = RoundedCornerShape(8.dp),
-                                contentPadding = PaddingValues(2.dp)
-                            ) {
-                                Text(text = "200", fontSize = (screenWidth.value * 0.05f).sp)
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(
-                            horizontalArrangement = Arrangement.SpaceEvenly
-                        ){
-                            Button(
-                                onClick = { belotConfirmIndex = col },
+                                label = { Text("Bodovi") },
+                                singleLine = true,
                                 modifier = Modifier
                                     .width(screenWidth / (mode.columnCount + 1))
-                                    .height(screenWidth / 9),
-                                colors = buttonColors,
-                                shape = RoundedCornerShape(8.dp),
-                                contentPadding = PaddingValues(2.dp)
+                                    .onFocusChanged { focusState ->
+                                        if (focusState.isFocused) {
+                                            scoreFieldValue = scoreFieldValue.copy(
+                                                selection = TextRange(
+                                                    0,
+                                                    scoreFieldValue.text.length
+                                                )
+                                            )
+                                        }
+                                    },
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Number
+                                )
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            OutlinedTextField(
+                                value = zvanjaFieldValue,
+                                onValueChange = { newValue ->
+                                    updateZvanja(col, newValue.text)
+                                    zvanjaFieldValue = newValue
+                                },
+                                label = { Text("Zvanja") },
+                                singleLine = true,
+                                modifier = Modifier
+                                    .width(screenWidth / (mode.columnCount + 1))
+                                    .onFocusChanged { focusState ->
+                                        if (focusState.isFocused) {
+                                            zvanjaFieldValue = zvanjaFieldValue.copy(
+                                                selection = TextRange(
+                                                    0,
+                                                    zvanjaFieldValue.text.length
+                                                )
+                                            )
+                                        }
+                                    },
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Number
+                                ),
+                                supportingText = {
+                                    Text(
+                                        text = "Ukupno: ${(if (scoreFields.value[col] == "") 0 else scoreFields.value[col].toInt()) + (if (zvanjaFields.value[col] == "") 0 else zvanjaFields.value[col].toInt())}",
+                                        textAlign = TextAlign.End,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(
+                                horizontalArrangement = Arrangement.SpaceEvenly
                             ) {
-                                Text(text = "Belot", fontSize = (screenWidth.value * 0.05f).sp)
+                                Button(
+                                    onClick = { addZvanja(col, "20") },
+                                    modifier = Modifier
+                                        .width(screenWidth / 9)
+                                        .height(screenWidth / 9),
+                                    colors = buttonColors,
+                                    shape = RoundedCornerShape(8.dp),
+                                    contentPadding = PaddingValues(2.dp)
+                                ) {
+                                    Text(text = "20", fontSize = (screenWidth.value * 0.05f).sp)
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Button(
+                                    onClick = { addZvanja(col, "50") },
+                                    modifier = Modifier
+                                        .width(screenWidth / 9)
+                                        .height(screenWidth / 9),
+                                    colors = buttonColors,
+                                    shape = RoundedCornerShape(8.dp),
+                                    contentPadding = PaddingValues(2.dp)
+                                ) {
+                                    Text(text = "50", fontSize = (screenWidth.value * 0.05f).sp)
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(
+                                horizontalArrangement = Arrangement.SpaceEvenly
+                            ) {
+                                Button(
+                                    onClick = { addZvanja(col, "90") },
+                                    modifier = Modifier
+                                        .width(screenWidth / 9)
+                                        .height(screenWidth / 9),
+                                    colors = buttonColors,
+                                    shape = RoundedCornerShape(8.dp),
+                                    contentPadding = PaddingValues(2.dp)
+                                ) {
+                                    Text(text = "90", fontSize = (screenWidth.value * 0.05f).sp)
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Button(
+                                    onClick = { addZvanja(col, "100") },
+                                    modifier = Modifier
+                                        .width(screenWidth / 9)
+                                        .height(screenWidth / 9),
+                                    colors = buttonColors,
+                                    shape = RoundedCornerShape(8.dp),
+                                    contentPadding = PaddingValues(2.dp)
+                                ) {
+                                    Text(text = "100", fontSize = (screenWidth.value * 0.05f).sp)
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(
+                                horizontalArrangement = Arrangement.SpaceEvenly
+                            ) {
+                                Button(
+                                    onClick = { addZvanja(col, "150") },
+                                    modifier = Modifier
+                                        .width(screenWidth / 9)
+                                        .height(screenWidth / 9),
+                                    colors = buttonColors,
+                                    shape = RoundedCornerShape(8.dp),
+                                    contentPadding = PaddingValues(2.dp)
+                                ) {
+                                    Text(text = "150", fontSize = (screenWidth.value * 0.05f).sp)
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Button(
+                                    onClick = { addZvanja(col, "200") },
+                                    modifier = Modifier
+                                        .width(screenWidth / 9)
+                                        .height(screenWidth / 9),
+                                    colors = buttonColors,
+                                    shape = RoundedCornerShape(8.dp),
+                                    contentPadding = PaddingValues(2.dp)
+                                ) {
+                                    Text(text = "200", fontSize = (screenWidth.value * 0.05f).sp)
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(
+                                horizontalArrangement = Arrangement.SpaceEvenly
+                            ) {
+                                Button(
+                                    onClick = { belotConfirmIndex = col },
+                                    modifier = Modifier
+                                        .width(screenWidth / (mode.columnCount + 1))
+                                        .height(screenWidth / 9),
+                                    colors = buttonColors,
+                                    shape = RoundedCornerShape(8.dp),
+                                    contentPadding = PaddingValues(2.dp)
+                                ) {
+                                    Text(text = "Belot", fontSize = (screenWidth.value * 0.05f).sp)
+                                }
+                            }
+                        }
+                        LaunchedEffect(scoreFields.value[col]) {
+                            if (scoreFieldValue.text != scoreFields.value[col]) {
+                                scoreFieldValue = scoreFieldValue.copy(
+                                    text = scoreFields.value[col],
+                                    selection = TextRange(scoreFields.value[col].length)
+                                )
+                            }
+                        }
+                        LaunchedEffect(zvanjaFields.value[col]) {
+                            if (zvanjaFieldValue.text != zvanjaFields.value[col]) {
+                                zvanjaFieldValue = zvanjaFieldValue.copy(
+                                    text = zvanjaFields.value[col],
+                                    selection = TextRange(zvanjaFields.value[col].length)
+                                )
                             }
                         }
                     }
-                    LaunchedEffect(scoreFields.value[col]) {
-                        if (scoreFieldValue.text != scoreFields.value[col]) {
-                            scoreFieldValue = scoreFieldValue.copy(
-                                text = scoreFields.value[col],
-                                selection = TextRange(scoreFields.value[col].length)
-                            )
-                        }
-                    }
-                    LaunchedEffect(zvanjaFields.value[col]) {
-                        if (zvanjaFieldValue.text != zvanjaFields.value[col]) {
-                            zvanjaFieldValue = zvanjaFieldValue.copy(
-                                text = zvanjaFields.value[col],
-                                selection = TextRange(zvanjaFields.value[col].length)
-                            )
-                        }
-                    }
                 }
-            }
 
-            if (showError) {
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = "⚠️ Unesite bodove za sve igrače/timove!",
-                    color = MaterialTheme.colorScheme.error
-                )
-            }
-            if (showError2) {
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = "⚠️ Zbroj bodova bez zvanja mora biti 162!",
-                    color = MaterialTheme.colorScheme.error
-                )
-            }
-            if (showError3) {
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = "⚠️ Zbroj bodova bez zvanja može biti najviše 162!",
-                    color = MaterialTheme.colorScheme.error
-                )
-            }
-            if (showError4) {
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = "⚠️ Pogrešan unos zvanja!",
-                    color = MaterialTheme.colorScheme.error
-                )
-            }
-            LaunchedEffect(showError) {
                 if (showError) {
-                    delay(10000)
-                    showError = false
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "⚠️ Unesite bodove za sve igrače/timove!",
+                        color = MaterialTheme.colorScheme.error
+                    )
                 }
-            }
-            LaunchedEffect(showError2) {
                 if (showError2) {
-                    delay(10000)
-                    showError2 = false
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "⚠️ Zbroj bodova bez zvanja mora biti 162!",
+                        color = MaterialTheme.colorScheme.error
+                    )
                 }
-            }
-            LaunchedEffect(showError3) {
                 if (showError3) {
-                    delay(10000)
-                    showError3 = false
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "⚠️ Zbroj bodova bez zvanja može biti najviše 162!",
+                        color = MaterialTheme.colorScheme.error
+                    )
                 }
-            }
-            LaunchedEffect(showError4) {
                 if (showError4) {
-                    delay(10000)
-                    showError4 = false
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "⚠️ Pogrešan unos zvanja!",
+                        color = MaterialTheme.colorScheme.error
+                    )
                 }
-            }
+                LaunchedEffect(showError) {
+                    if (showError) {
+                        delay(10000)
+                        showError = false
+                    }
+                }
+                LaunchedEffect(showError2) {
+                    if (showError2) {
+                        delay(10000)
+                        showError2 = false
+                    }
+                }
+                LaunchedEffect(showError3) {
+                    if (showError3) {
+                        delay(10000)
+                        showError3 = false
+                    }
+                }
+                LaunchedEffect(showError4) {
+                    if (showError4) {
+                        delay(10000)
+                        showError4 = false
+                    }
+                }
 
-            Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(32.dp))
 
-            Row(
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Button(
-                    onClick = {
-                        val scores = scoreFields.value.map { it.toIntOrNull() }
-                        val zvanja = zvanjaFields.value.map { it.toIntOrNull() ?: 0 }
-                        val total = scores.indices.sumOf { i -> (scores[i] ?: 0) }
-                        val totalZvanja = zvanja.indices.sumOf { i -> (zvanja[i] ?: 0) }
-                        if (scores.any { it == null }) {
-                            showError = true
-                        } else if (total != 162 && mode != BelaMode.TWO_CLOSED){
-                            showError2 = true
-                        } else if (total > 162) {
-                            showError3 = true
-                        } else if (totalZvanja % 10 != 0) {
-                            showError4 = true
-                        }
-                        else {
-                            viewModel.addRound(
-                                scores.map { it!! }.toMutableList(),
-                                zvanja.toMutableList(),
-                                zvaoIndex
-                            )
-                            navController.navigate("bela")
-                        }
-                    },
-                    modifier = Modifier
-                        .width(screenWidth / 3)
-                        .height(screenWidth / 7),
-                    colors = buttonColors,
-                    contentPadding = PaddingValues(2.dp)
+                Row(
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(text = "Spremi", fontSize = (screenWidth.value * 0.05f).sp)
-                }
-            }
-        }
-        belotConfirmIndex?.let { col ->
-            AlertDialog(
-                onDismissRequest = { belotConfirmIndex = null },
-                title = { Text("Potvrda belota") },
-                text = { Text("Je li tim \"${viewModel.columnLabel(col)}\" ostvario belot?") },
-                confirmButton = {
                     Button(
                         onClick = {
-                            viewModel.declareBelot(col)
-                            belotConfirmIndex = null
-                            navController.navigate("bela")
+                            val scores = scoreFields.value.map { it.toIntOrNull() }
+                            val zvanja = zvanjaFields.value.map { it.toIntOrNull() ?: 0 }
+                            val total = scores.indices.sumOf { i -> (scores[i] ?: 0) }
+                            val totalZvanja = zvanja.indices.sumOf { i -> (zvanja[i] ?: 0) }
+                            if (scores.any { it == null }) {
+                                showError = true
+                            } else if (total != 162 && mode != BelaMode.TWO_CLOSED) {
+                                showError2 = true
+                            } else if (total > 162) {
+                                showError3 = true
+                            } else if (totalZvanja % 10 != 0) {
+                                showError4 = true
+                            } else {
+                                viewModel.addRound(
+                                    scores.map { it!! }.toMutableList(),
+                                    zvanja.toMutableList(),
+                                    zvaoIndex
+                                )
+                                navController.navigate("bela")
+                            }
                         },
-                        colors = buttonColors
+                        modifier = Modifier
+                            .width(screenWidth / 3)
+                            .height(screenWidth / 7),
+                        colors = buttonColors,
+                        contentPadding = PaddingValues(2.dp)
                     ) {
-                        Text("Da")
-                    }
-                },
-                dismissButton = {
-                    Button(
-                        onClick = { belotConfirmIndex = null },
-                        colors = buttonColors
-                    ) {
-                        Text("Ne")
+                        Text(text = "Spremi", fontSize = (screenWidth.value * 0.05f).sp)
                     }
                 }
-            )
+            }
+            belotConfirmIndex?.let { col ->
+                AlertDialog(
+                    onDismissRequest = { belotConfirmIndex = null },
+                    title = { Text("Potvrda belota") },
+                    text = { Text("Je li tim \"${viewModel.columnLabel(col)}\" ostvario belot?") },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                viewModel.declareBelot(col)
+                                belotConfirmIndex = null
+                                navController.navigate("bela")
+                            },
+                            colors = buttonColors
+                        ) {
+                            Text("Da")
+                        }
+                    },
+                    dismissButton = {
+                        Button(
+                            onClick = { belotConfirmIndex = null },
+                            colors = buttonColors
+                        ) {
+                            Text("Ne")
+                        }
+                    }
+                )
+            }
         }
     }
 }

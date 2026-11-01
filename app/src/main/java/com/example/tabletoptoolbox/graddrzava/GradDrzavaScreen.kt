@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -98,6 +99,7 @@ fun GradDrzava(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
+            .imePadding()
             .pointerInput(Unit) {
                 detectTapGestures {
                     focusManager.clearFocus()
@@ -244,7 +246,7 @@ fun GradDrzava(
                 }
             }
             LazyColumn(
-                modifier = Modifier.fillMaxHeight(),
+                modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(viewModel.categories.size, key = { index -> index }) { index ->

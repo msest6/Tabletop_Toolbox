@@ -1,6 +1,7 @@
 package com.example.tabletoptoolbox.tabletier
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -10,8 +11,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material3.*
@@ -33,6 +36,7 @@ import coil.compose.AsyncImage
 import com.example.tabletoptoolbox.data.boardGames.ImageStorage
 import java.io.File
 
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 fun TableTierNewGame(
     navController: NavController,
@@ -117,161 +121,168 @@ fun TableTierNewGame(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .clickable(
-                indication = null,
-                interactionSource = remember { MutableInteractionSource() }
-            ) { focusManager.clearFocus() }
-            .padding(16.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val fullHeight = maxHeight           // puna visina, bez tipkovnice
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .imePadding()                          // viewport završava iznad tipkovnice
+                .verticalScroll(rememberScrollState()) // sadržaj se skrola
+                .heightIn(min = fullHeight)            // sadržaj je uvijek visok kao cijeli ekran
+                .clickable(
+                    indication = null,
+                    interactionSource = remember { MutableInteractionSource() }
+                ) { focusManager.clearFocus() }
+                .padding(16.dp)
         ) {
-            ImagePickerButton(
-                imagePath = formState.tempImagePath ?: formState.existingImagePath,
-                onClick = { showImageSourceDialog = true },
-                modifier = Modifier.size(110.dp)
-            )
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                OutlinedTextField(
-                    value = formState.title,
-                    onValueChange = viewModel::onTitleChanged,
-                    label = { Text("Naziv igre") },
-                    singleLine = true,
-                    isError = formState.titleError != null,
-                    supportingText = {
-                        Text(text = formState.titleError ?: "${formState.title.length}/30")
-                    },
-                    keyboardOptions = KeyboardOptions(
-                        capitalization = KeyboardCapitalization.Sentences
-                    ),
-                    modifier = Modifier.fillMaxWidth()
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                ImagePickerButton(
+                    imagePath = formState.tempImagePath ?: formState.existingImagePath,
+                    onClick = { showImageSourceDialog = true },
+                    modifier = Modifier.size(110.dp)
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.width(16.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    OutlinedTextField(
+                        value = formState.title,
+                        onValueChange = viewModel::onTitleChanged,
+                        label = { Text("Naziv igre") },
+                        singleLine = true,
+                        isError = formState.titleError != null,
+                        supportingText = {
+                            Text(text = formState.titleError ?: "${formState.title.length}/30")
+                        },
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Sentences
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    OutlinedTextField(
+                        value = formState.ratingText,
+                        onValueChange = viewModel::onRatingChanged,
+                        label = { Text("Ocjena (0-10)") },
+                        singleLine = true,
+                        isError = formState.ratingError != null,
+                        supportingText = formState.ratingError?.let { { Text(it) } },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedTextField(
+                    value = formState.playTimeText,
+                    onValueChange = viewModel::onPlayTimeChanged,
+                    label = { Text("Trajanje (min)") },
+                    singleLine = true,
+                    isError = formState.playTimeError != null,
+                    supportingText = formState.playTimeError?.let { { Text(it) } },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.weight(1f)
+                )
 
                 OutlinedTextField(
-                    value = formState.ratingText,
-                    onValueChange = viewModel::onRatingChanged,
-                    label = { Text("Ocjena (0-10)") },
+                    value = formState.minPlayersText,
+                    onValueChange = viewModel::onMinPlayersChanged,
+                    label = { Text("Igrača od") },
                     singleLine = true,
-                    isError = formState.ratingError != null,
-                    supportingText = formState.ratingError?.let { { Text(it) } },
+                    isError = formState.minPlayersError != null,
+                    supportingText = formState.minPlayersError?.let { { Text(it) } },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.weight(1f)
+                )
+
+                OutlinedTextField(
+                    value = formState.maxPlayersText,
+                    onValueChange = viewModel::onMaxPlayersChanged,
+                    label = { Text("do") },
+                    placeholder = { Text("br. ili +") },
+                    singleLine = true,
+                    isError = formState.maxPlayersError != null,
+                    supportingText = formState.maxPlayersError?.let { { Text(it) } },
+                    modifier = Modifier.weight(1f)
                 )
             }
-        }
-        Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
+            Text(
+                text = "Opis igre",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(4.dp))
             OutlinedTextField(
-                value = formState.playTimeText,
-                onValueChange = viewModel::onPlayTimeChanged,
-                label = { Text("Trajanje (min)") },
-                singleLine = true,
-                isError = formState.playTimeError != null,
-                supportingText = formState.playTimeError?.let { { Text(it) } },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.weight(1f)
+                value = formState.description,
+                onValueChange = viewModel::onDescriptionChanged,
+                placeholder = { Text("Opiši pravila, dojmove, sve što ti je bitno...") },
+                supportingText = { Text("${formState.description.length}/1000") },
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Sentences
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
             )
 
-            OutlinedTextField(
-                value = formState.minPlayersText,
-                onValueChange = viewModel::onMinPlayersChanged,
-                label = { Text("Igrača od") },
-                singleLine = true,
-                isError = formState.minPlayersError != null,
-                supportingText = formState.minPlayersError?.let { { Text(it) } },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.weight(1f)
-            )
+            Spacer(modifier = Modifier.height(16.dp))
 
-            OutlinedTextField(
-                value = formState.maxPlayersText,
-                onValueChange = viewModel::onMaxPlayersChanged,
-                label = { Text("do") },
-                placeholder = { Text("br. ili +") },
-                singleLine = true,
-                isError = formState.maxPlayersError != null,
-                supportingText = formState.maxPlayersError?.let { { Text(it) } },
-                modifier = Modifier.weight(1f)
-            )
-        }
-        Spacer(modifier = Modifier.height(20.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                if (formState.isEditMode) {
+                    OutlinedButton(
+                        onClick = { showDeleteConfirmDialog = true },
+                        enabled = !formState.isSaving && !formState.isDeleting,
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error
+                        ),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp)
+                    ) {
+                        if (formState.isDeleting) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text("Izbriši")
+                        }
+                    }
+                }
 
-        Text(
-            text = "Opis igre",
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.Bold
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        OutlinedTextField(
-            value = formState.description,
-            onValueChange = viewModel::onDescriptionChanged,
-            placeholder = { Text("Opiši pravila, dojmove, sve što ti je bitno...") },
-            supportingText = { Text("${formState.description.length}/1000") },
-            keyboardOptions = KeyboardOptions(
-                capitalization = KeyboardCapitalization.Sentences
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            if (formState.isEditMode) {
-                OutlinedButton(
-                    onClick = { showDeleteConfirmDialog = true },
+                ElevatedButton(
+                    colors = buttonColors,
+                    onClick = { viewModel.saveGame(context) },
                     enabled = !formState.isSaving && !formState.isDeleting,
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error
-                    ),
                     modifier = Modifier
                         .weight(1f)
                         .height(48.dp)
                 ) {
-                    if (formState.isDeleting) {
+                    if (formState.isSaving) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(20.dp),
-                            strokeWidth = 2.dp
+                            strokeWidth = 2.dp,
+                            color = buttonColors.contentColor
                         )
                     } else {
-                        Text("Izbriši")
+                        Text("Spremi")
                     }
-                }
-            }
-
-            ElevatedButton(
-                colors = buttonColors,
-                onClick = { viewModel.saveGame(context) },
-                enabled = !formState.isSaving && !formState.isDeleting,
-                modifier = Modifier
-                    .weight(1f)
-                    .height(48.dp)
-            ) {
-                if (formState.isSaving) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        strokeWidth = 2.dp,
-                        color = buttonColors.contentColor
-                    )
-                } else {
-                    Text("Spremi")
                 }
             }
         }
@@ -282,8 +293,7 @@ fun TableTierNewGame(
             onDismiss = { showImageSourceDialog = false },
             onCameraSelected = {
                 showImageSourceDialog = false
-                launchCamera()
-            },
+                launchCamera() },
             onGallerySelected = {
                 showImageSourceDialog = false
                 galleryLauncher.launch(
@@ -292,7 +302,6 @@ fun TableTierNewGame(
             }
         )
     }
-
     if (showDeleteConfirmDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirmDialog = false },
@@ -304,8 +313,7 @@ fun TableTierNewGame(
                     viewModel.deleteGame()
                 }) {
                     Text("Izbriši", color = MaterialTheme.colorScheme.error)
-                }
-            },
+                } },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirmDialog = false }) {
                     Text("Odustani")

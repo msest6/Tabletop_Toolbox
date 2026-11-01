@@ -1,5 +1,6 @@
 package com.example.tabletoptoolbox.ui
 
+import androidx.activity.SystemBarStyle
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -17,9 +18,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.ui.graphics.Color
 import com.example.tabletoptoolbox.data.model.MenuItem
 
 /**
@@ -39,28 +44,46 @@ fun HomeScreen(navController: NavController, buttonColors: ButtonColors) {
         MenuItem("boardGames", "Društvene Igre"),
         MenuItem("tableTier", "Table Tier")
     )
-
-    LazyColumn(
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .statusBarsPadding()
+            .background(color = buttonColors.contentColor)
     ) {
-        items(items) { menuItem ->
-            Button(
-                onClick = { navController.navigate(menuItem.route) },
-                modifier = Modifier
-                    .padding(16.dp)
-                    .width(screenWidth / 1.1f)
-                    .height(screenWidth / 4),
-                colors = buttonColors
-            ) {
-                Text(
-                    text = menuItem.label,
-                    fontSize = (screenWidth.value * 0.08f).sp
-                )
+        LazyColumn(
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .fillMaxSize()
+                .navigationBarsPadding()
+                .background(MaterialTheme.colorScheme.background)
+                .statusBarsPadding()
+        ) {
+            item {
+                Box(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Tabletop Toolbox",
+                        fontSize = (screenWidth.value * 0.1f).sp,
+                        color = buttonColors.containerColor
+                    )
+                }
+            }
+            items(items) { menuItem ->
+                Button(
+                    onClick = { navController.navigate(menuItem.route) },
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .width(screenWidth / 1.1f)
+                        .height(screenWidth / 4),
+                    colors = buttonColors
+                ) {
+                    Text(
+                        text = menuItem.label,
+                        fontSize = (screenWidth.value * 0.08f).sp
+                    )
+                }
             }
         }
     }

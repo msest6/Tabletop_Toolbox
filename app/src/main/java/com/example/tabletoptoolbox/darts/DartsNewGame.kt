@@ -10,12 +10,14 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -74,6 +76,7 @@ fun DartsNewGame(navController: NavController, buttonColors: ButtonColors, viewM
         modifier = Modifier
             .fillMaxSize()
             .padding(10.dp)
+            .imePadding()
             .pointerInput(Unit) {
                 detectTapGestures {
                     focusManager.clearFocus()
@@ -256,7 +259,7 @@ fun DartsNewGame(navController: NavController, buttonColors: ButtonColors, viewM
                             color = MaterialTheme.colorScheme.onErrorContainer,
                             modifier = Modifier.weight(1f)
                         )
-                        TextButton(onClick = { showError1 = false }) {
+                        TextButton(onClick = { showError3 = false }) {
                             Text("OK", color = MaterialTheme.colorScheme.onErrorContainer)
                         }
                     }
@@ -267,8 +270,9 @@ fun DartsNewGame(navController: NavController, buttonColors: ButtonColors, viewM
 
             // Scrollable container
             LazyColumn(
-                modifier = Modifier.fillMaxHeight(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(bottom = 64.dp)
             ) {
                 items(playerNames.size, key = { index -> index }) { index ->
                     OutlinedTextField(

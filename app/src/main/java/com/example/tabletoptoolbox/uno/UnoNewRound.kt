@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -59,6 +60,7 @@ fun UnoNewRound(navController: NavController, buttonColors: ButtonColors, viewMo
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
+            .imePadding()
             .pointerInput(Unit) {
                 detectTapGestures {
                     focusManager.clearFocus()

@@ -1,8 +1,10 @@
 package com.example.tabletoptoolbox.bela
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -10,8 +12,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.MaterialTheme
@@ -40,6 +46,7 @@ import com.example.tabletoptoolbox.data.model.BelaMode
  * modove ne koriste. Za 4 igrača koriste se stvarno upisana imena.
  * "Odustani" vraća na izbor igara bez spremanja, "Nastavi" pokreće novu igru.
  */
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 fun BelaNewGame(navController: NavController, buttonColors: ButtonColors, viewModel: BelaViewModel) {
     val configuration = LocalConfiguration.current
@@ -54,93 +61,100 @@ fun BelaNewGame(navController: NavController, buttonColors: ButtonColors, viewMo
         BelaMode.TWO_OPEN, BelaMode.TWO_CLOSED -> listOf("Ja", "Protivnik")
     }
 
-    // Polja se resetiraju na prazno svaki put kad se promijeni mod,
-    // jer se broj i raspored polja mijenjaju.
     var names by remember(selectedMode) { mutableStateOf(List(labels.size) { "" }) }
 
     val focusManager = LocalFocusManager.current
+    val scrollState = rememberScrollState()
 
-    Box(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
             .pointerInput(Unit) {
-                detectTapGestures {
-                    focusManager.clearFocus()
-                }
+                detectTapGestures { focusManager.clearFocus() }
             }
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 24.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            BelaModeDropdown(
-                selectedMode = selectedMode,
-                onModeSelected = { selectedMode = it }
-            )
-            BelaTargetScoreDropdown(
-                selectedScore = selectedTargetScore,
-                onScoreSelected = { selectedTargetScore = it }
-            )
-        }
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "Nova igra",
-                fontSize = (screenWidth.value * 0.07f).sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.tertiary,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
+        val fullHeight = maxHeight          // vidljiva visina (bez tipkovnice)
 
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-                contentAlignment = Alignment.Center
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .imePadding()
+                .verticalScroll(scrollState)
+                .padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                key(selectedMode) {
-                    BelaPlayerNameFields(
-                        labels = labels,
-                        names = names,
-                        onNameChange = { index, value ->
-                            names = names.toMutableList().also { it[index] = value }
-                        }
-                    )
-                }
+                BelaModeDropdown(
+                    selectedMode = selectedMode,
+                    onModeSelected = { selectedMode = it }
+                )
+                BelaTargetScoreDropdown(
+                    selectedScore = selectedTargetScore,
+                    onScoreSelected = { selectedTargetScore = it }
+                )
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
-
-            Row(
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                modifier = Modifier.fillMaxWidth()
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = fullHeight - 32.dp), // 32 = padding gore + dolje
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Button(
-                    onClick = {
-                        val playerNames = names.mapIndexed { i, n ->
-                            n.trim().ifBlank { labels.getOrElse(i) { "Igrač ${i + 1}" } }
-                        }.toMutableList()
-                        if (selectedMode == BelaMode.FOUR) {
-                            val tmp = playerNames[1]
-                            playerNames[1] = playerNames[3]
-                            playerNames[3] = tmp
-                        }
-                        viewModel.startNewGame(selectedMode, playerNames, selectedTargetScore)
-                        navController.navigate("bela")
-                    },
+                Text(
+                    text = "Nova igra",
+                    fontSize = (screenWidth.value * 0.07f).sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.tertiary,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                Box(
                     modifier = Modifier
-                        .width(screenWidth / 2)
-                        .height(screenWidth / 6),
-                    colors = buttonColors,
-                    contentPadding = PaddingValues(2.dp)
+                        .weight(1f)              // radi jer Column ima min visinu
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text(text = "Započni partiju", fontSize = (screenWidth.value * 0.05f).sp)
+                    key(selectedMode) {
+                        BelaPlayerNameFields(
+                            labels = labels,
+                            names = names,
+                            onNameChange = { index, value ->
+                                names = names.toMutableList().also { it[index] = value }
+                            }
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                Row(
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Button(
+                        onClick = {
+                            val playerNames = names.mapIndexed { i, n ->
+                                n.trim().ifBlank { labels.getOrElse(i) { "Igrač ${i + 1}" } }
+                            }.toMutableList()
+                            if (selectedMode == BelaMode.FOUR) {
+                                val tmp = playerNames[1]
+                                playerNames[1] = playerNames[3]
+                                playerNames[3] = tmp
+                            }
+                            viewModel.startNewGame(selectedMode, playerNames, selectedTargetScore)
+                            navController.navigate("bela")
+                        },
+                        modifier = Modifier
+                            .width(screenWidth / 2)
+                            .height(screenWidth / 6),
+                        colors = buttonColors,
+                        contentPadding = PaddingValues(2.dp)
+                    ) {
+                        Text(text = "Započni partiju", fontSize = (screenWidth.value * 0.05f).sp)
+                    }
                 }
             }
         }

@@ -1,6 +1,5 @@
 package com.example.tabletoptoolbox.wheelOfNames
 
-import android.R
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Sort
@@ -39,8 +38,9 @@ fun WheelDetail(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
             .padding(12.dp)
+            .imePadding()
+            .verticalScroll(rememberScrollState())
             .pointerInput(Unit) {
                 detectTapGestures(onTap = { focusManager.clearFocus() })
             }
