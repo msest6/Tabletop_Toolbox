@@ -82,6 +82,12 @@ class BoardGameViewModel(private val repository: BoardGameRepository) : ViewMode
         applyScoreChange(index, player.copy(score = player.score - 1))
     }
 
+    fun setScore(index: Int, newScore: Int) {
+        val player = players.getOrNull(index) ?: return
+        if (player.playerName.isBlank()) return
+        applyScoreChange(index, player.copy(score = newScore))
+    }
+
     private fun applyScoreChange(index: Int, updated: BoardGamePlayer) {
         val wonNow = winScore != 0 && updated.score >= winScore
         val finalPlayer = if (wonNow) updated.copy(winNumber = updated.winNumber + 1) else updated

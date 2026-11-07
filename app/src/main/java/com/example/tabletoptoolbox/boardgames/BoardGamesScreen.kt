@@ -14,6 +14,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -27,6 +28,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AttachMoney
@@ -38,6 +41,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -49,6 +53,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -57,6 +62,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalFocusManager
@@ -64,6 +70,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
@@ -262,7 +269,49 @@ fun BoardGames(
                             singleLine = true,
                             modifier = Modifier.width(screenWidth / 3)
                         )
-                        Text(text = player.score.toString(), fontSize = (screenWidth.value * 0.08f).sp)
+                        var scoreField by remember(player.score) {
+                            mutableStateOf(TextFieldValue(player.score.toString()))
+                        }
+                        var isScoreFocused by remember { mutableStateOf(false) }
+
+                        LaunchedEffect(isScoreFocused) {
+                            if (isScoreFocused) {
+                                withFrameNanos { } // pričekaj default postavljanje kursora
+                                scoreField = scoreField.copy(selection = TextRange(0, scoreField.text.length))
+                            }
+                        }
+
+                        BasicTextField(
+                            value = scoreField,
+                            onValueChange = { scoreField = it },
+                            singleLine = true,
+                            textStyle = TextStyle(
+                                fontSize = (screenWidth.value * 0.08f).sp,
+                                color = LocalContentColor.current
+                            ),
+                            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Phone,
+                                imeAction = ImeAction.Done
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onDone = { focusManager.clearFocus() }
+                            ),
+                            modifier = Modifier
+                                .width(IntrinsicSize.Min)
+                                .onFocusChanged { focusState ->
+                                    isScoreFocused = focusState.isFocused
+                                    if (!focusState.isFocused) {
+                                        val parsed = scoreField.text.trim().toIntOrNull()
+                                        if (parsed != null && parsed != player.score) {
+                                            viewModel.setScore(index, parsed)
+                                        } else {
+                                            // neispravan unos ili bez promjene: vrati stari broj
+                                            scoreField = TextFieldValue(player.score.toString())
+                                        }
+                                    }
+                                }
+                        )
                         Button(
                             colors = buttonColors,
                             modifier = Modifier.width(screenWidth / 8).height(screenWidth / 8)

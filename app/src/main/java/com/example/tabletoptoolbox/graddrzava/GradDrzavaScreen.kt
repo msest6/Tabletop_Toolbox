@@ -301,15 +301,20 @@ fun GradDrzava(
                     }
                 }
                 item {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Button(
-                        colors = buttonColors,
-                        onClick = { viewModel.submitRound() }
-                    ){
-                        Text(
-                            text = "Spremi",
-                            fontSize = (screenWidth.value * 0.05f).sp
-                        )
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Button(
+                            colors = buttonColors,
+                            onClick = { viewModel.submitRound() }
+                        ) {
+                            Text(
+                                text = "Spremi",
+                                fontSize = (screenWidth.value * 0.05f).sp
+                            )
+                        }
                     }
                 }
             }
